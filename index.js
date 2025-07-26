@@ -279,9 +279,18 @@ bot.catch((err, ctx) => {
 const app = express();
 app.use(bot.webhookCallback('/bot'));
 app.get('/', (req, res) => res.send('🤖 Бот работает!'));
+
+app.get('/setwebhook', async (req, res) => {
+  try {
+    await bot.telegram.setWebhook(`https://${process.env.RENDER_EXTERNAL_HOSTNAME}/bot`);
+    res.send('✅ Webhook установлен!');
+  } catch (error) {
+    console.error('Ошибка при установке webhook:', error);
+    res.status(500).send('❌ Ошибка при установке webhook');
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   console.log(`🚀 Бот запущен на порту ${PORT}`);
-  await bot.telegram.setWebhook(`https://${process.env.RENDER_EXTERNAL_HOSTNAME}/bot`);
-  res.send('✅ Webhook установлен!');
 });
