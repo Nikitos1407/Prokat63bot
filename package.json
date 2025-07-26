@@ -9,6 +9,6 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "telegraf": "^4.12.2",
-    "telegraf-inline-calendar": "^6.0.3"
+    "telegraf-inline-calendar": "github:Garufa13/telegraf-inline-calendar"
   }
 }
