@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const { Telegraf, Markup } = require('telegraf');
 
@@ -7,6 +6,7 @@ const ownerId = process.env.OWNER_ID;
 
 const tools = [
   {
+    id: 'perforator',
     name: 'Перфоратор Makita РК2470',
     price: 1400,
     deposit: 5000,
@@ -14,6 +14,7 @@ const tools = [
     photo: 'https://telegra.ph/file/6f257a24463d2532a64fd.jpg'
   },
   {
+    id: 'vibro',
     name: 'Виброплита Champion PC9045F',
     price: 1800,
     deposit: 5000,
@@ -21,6 +22,7 @@ const tools = [
     photo: 'https://telegra.ph/file/e395a208e1e8026cc6c34.jpg'
   },
   {
+    id: 'mixer',
     name: 'Строительный миксер Ресанта СМ-1600Э-2',
     price: 850,
     deposit: 3000,
@@ -28,6 +30,7 @@ const tools = [
     photo: 'https://telegra.ph/file/f7f77b5043946b3f8786f.jpg'
   },
   {
+    id: 'auger',
     name: 'Мотобур Huter GGD-300 с комплектом',
     price: 1300,
     deposit: 5000,
@@ -35,6 +38,7 @@ const tools = [
     photo: 'https://telegra.ph/file/bc97aa4e4c464ebc1276e.jpg'
   },
   {
+    id: 'trimmer',
     name: 'Мотокоса Champion',
     price: 1300,
     deposit: 3000,
@@ -52,12 +56,14 @@ bot.start((ctx) => {
 
 Выберите инструмент для аренды:
   `;
-  const buttons = tools.map(t => [Markup.button.callback(`${t.name} — ${t.price}₽`, t.name)]);
+  const buttons = tools.map(t =>
+    [Markup.button.callback(`${t.name} — ${t.price}₽`, t.id)]
+  );
   ctx.replyWithMarkdown(welcome, Markup.inlineKeyboard(buttons));
 });
 
 tools.forEach(tool => {
-  bot.action(tool.name, async (ctx) => {
+  bot.action(tool.id, async (ctx) => {
     await ctx.replyWithPhoto({ url: tool.photo }, {
       caption: `🛠 *${tool.name}*
 
@@ -67,12 +73,12 @@ ${tool.description}
 🔐 *Залог:* ${tool.deposit} ₽`,
       parse_mode: 'Markdown',
       ...Markup.inlineKeyboard([
-        [Markup.button.callback('👉 Арендовать', `rent_${tool.name}`)]
+        [Markup.button.callback('👉 Арендовать', `rent_${tool.id}`)]
       ])
     });
   });
 
-  bot.action(`rent_${tool.name}`, async (ctx) => {
+  bot.action(`rent_${tool.id}`, async (ctx) => {
     ctx.reply(`📩 Отправьте заявку в следующем формате:
 
 Имя:
