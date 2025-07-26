@@ -19,7 +19,7 @@ const tools = [
     price: 1800,
     deposit: 5000,
     description: 'Бензиновая виброплита 4.8 кВт для уплотнения грунта, тротуарной плитки, щебня.',
-    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/Вибротрамбовка Champion pc9045f фото1.jpg'
+    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/vibroplate-original1.jpg'
   },
   {
     id: 'mixer',
@@ -47,19 +47,25 @@ const tools = [
   }
 ];
 
-bot.start((ctx) => {
-  const welcome = `👋 Добро пожаловать в *ПРОКАТ Инструментов 63*!
+bot.start(async (ctx) => {
+  const welcomeMessage = `👋 Добро пожаловать в *ПРОКАТ Инструментов 63*!
 
 📍 *Гаражный бокс (Новокуйбышевск)*
 🕘 Работаем с 9:00 до 21:00
 💵 Оплата: наличные / перевод
 
-Выберите инструмент для аренды:
-  `;
-  const buttons = tools.map(t =>
-    [Markup.button.callback(`${t.name} — ${t.price}₽`, t.id)]
+Выберите инструмент для аренды:`;
+
+  const buttons = tools.map(tool => [Markup.button.callback(`${tool.name} — ${tool.price}₽`, tool.id)]);
+
+  await ctx.replyWithPhoto(
+    { url: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/logo-start.jpg' }, // Замените на ваш логотип или фото
+    {
+      caption: welcomeMessage,
+      parse_mode: 'Markdown',
+      reply_markup: Markup.inlineKeyboard(buttons)
+    }
   );
-  ctx.replyWithMarkdown(welcome, Markup.inlineKeyboard(buttons));
 });
 
 tools.forEach(tool => {
@@ -72,7 +78,7 @@ ${tool.description}
 💰 *Цена:* ${tool.price} ₽ / сутки
 🔐 *Залог:* ${tool.deposit} ₽`,
       parse_mode: 'Markdown',
-      ...Markup.inlineKeyboard([
+      reply_markup: Markup.inlineKeyboard([
         [Markup.button.callback('👉 Арендовать', `rent_${tool.id}`)]
       ])
     });
