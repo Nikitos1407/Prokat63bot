@@ -19,7 +19,7 @@ const tools = [
     price: 1800,
     deposit: 5000,
     description: 'Бензиновая виброплита 4.8 кВт для уплотнения грунта, тротуарной плитки, щебня.',
-    photo: 'https://telegra.ph/file/e395a208e1e8026cc6c34.jpg'
+    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/vibroplate-original1.jpg'
   },
   {
     id: 'mixer',
@@ -27,7 +27,7 @@ const tools = [
     price: 850,
     deposit: 3000,
     description: 'Инструмент для замеса строительных смесей. Удобная двухскоростная модель.',
-    photo: 'https://telegra.ph/file/f7f77b5043946b3f8786f.jpg'
+    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/mikser-original1.jpg'
   },
   {
     id: 'auger',
@@ -35,7 +35,7 @@ const tools = [
     price: 1300,
     deposit: 5000,
     description: 'С шнеками (100–250 мм), удлинитель 1000 мм. Идеально для установки заборов, бурения лунок и свай.',
-    photo: 'https://ibb.co/ycQM9BF9'
+    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/molotok-original1.jpg'
   },
   {
     id: 'trimmer',
@@ -43,7 +43,7 @@ const tools = [
     price: 1300,
     deposit: 3000,
     description: 'Бензиновый триммер для покоса травы, кустарников и участков средней сложности.',
-    photo: 'https://telegra.ph/file/27e45c733ee6a5129e8f5.jpg'
+    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/molotok-original1.jpg'
   }
 ];
 
