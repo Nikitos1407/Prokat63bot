@@ -1,9 +1,35 @@
 require('dotenv').config();
-const { Telegraf, Markup } = require('telegraf');
+const { Telegraf, Markup, Scenes, session } = require('telegraf');
+const { enter, leave } = Scenes.Stage;
+const { Calendar } = require('telegraf-calendar-telegram'); // npm install telegraf-calendar-telegram
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const ownerId = process.env.OWNER_ID;
 
+// 📅 Календарь
+const calendarStart = new Calendar(bot, {
+  startWeekDay: 1,
+  weekDayNames: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+  monthNames: [
+    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+  ],
+  minDate: new Date(),
+  dateFormat: 'DD.MM.YYYY'
+});
+
+const calendarEnd = new Calendar(bot, {
+  startWeekDay: 1,
+  weekDayNames: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+  monthNames: [
+    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+  ],
+  minDate: new Date(),
+  dateFormat: 'DD.MM.YYYY'
+});
+
+// 🧰 Инструменты
 const tools = [
   {
     id: 'perforator',
@@ -34,7 +60,7 @@ const tools = [
     name: 'Мотобур Huter GGD-300 с комплектом',
     price: 1300,
     deposit: 5000,
-    description: 'С шнеками (100–250 мм), удлинитель 1000 мм. Идеально для установки заборов, бурения лунок и свай. Комплект: Мотобур - 1шт, Шнек на выбор - 1шт, Удлинитель - 1шт',
+    description: 'С шнеками (100–250 мм), удлинитель 1000 мм. Идеально для установки заборов, бурения лунок и свай.',
     photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/motobur1.jpg'
   },
   {
@@ -47,9 +73,14 @@ const tools = [
   }
 ];
 
-// Команда /start
+// 👉 Хранилище сессии аренды
+const rentalState = new Map();
+
+bot.use(session());
+
+// 👋 /start
 bot.start(async (ctx) => {
-  const welcomeText = `👋 Добро пожаловать в *ПРОКАТ Инструментов 63*!\n
+  const welcome = `👋 Добро пожаловать в *ПРОКАТ Инструментов 63*!\n
 📍 *Гаражный бокс (Новокуйбышевск)*
 🕘 Работаем с 9:00 до 21:00
 💵 Оплата: наличные / перевод
@@ -60,23 +91,21 @@ bot.start(async (ctx) => {
     Markup.button.callback(`${tool.name} — ${tool.price}₽`, tool.id)
   ]);
 
-  // Сначала отправляем фото
-  await ctx.sendPhoto('https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/logo.png');
-
-  // Потом текст с кнопками
-  await ctx.reply(welcomeText, {
-    parse_mode: 'Markdown',
-    reply_markup: {
-      inline_keyboard: buttons
+  await ctx.replyWithPhoto(
+    { url: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/logo.png' },
+    {
+      caption: welcome,
+      parse_mode: 'Markdown',
+      reply_markup: Markup.inlineKeyboard(buttons)
     }
-  });
+  );
 });
 
-// Кнопки по каждому инструменту
+// 🔧 Показать инфо об инструменте и предложить аренду
 tools.forEach(tool => {
   bot.action(tool.id, async (ctx) => {
-    await ctx.answerCbQuery(); // Убрать "часики"
-    await ctx.sendPhoto(tool.photo, {
+    await ctx.answerCbQuery();
+    await ctx.replyWithPhoto(tool.photo, {
       caption: `🛠 *${tool.name}*\n\n${tool.description}\n\n💰 *Цена:* ${tool.price} ₽ / сутки\n🔐 *Залог:* ${tool.deposit} ₽`,
       parse_mode: 'Markdown',
       reply_markup: {
@@ -89,23 +118,77 @@ tools.forEach(tool => {
 
   bot.action(`rent_${tool.id}`, async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply(`📩 Отправьте заявку в следующем формате:
-
-Имя:
-Телефон:
-Инструмент: ${tool.name}
-Дата начала:
-Комментарий (если нужно):`);
+    const chatId = ctx.chat.id;
+    rentalState.set(chatId, { tool }); // сохраняем выбранный инструмент
+    await ctx.reply('👤 Введите ваше имя:');
   });
 });
 
-// Обработка текстовых сообщений
+// 📝 Последовательный приём данных
 bot.on('text', async (ctx) => {
-  if (ctx.message.text.toLowerCase().includes('телефон')) {
-    await ctx.telegram.sendMessage(ownerId, `📥 Заявка:\n\n${ctx.message.text}`);
-    await ctx.reply('✅ Заявка отправлена! Мы скоро свяжемся с вами.');
+  const chatId = ctx.chat.id;
+  const state = rentalState.get(chatId);
+  if (!state) return;
+
+  if (!state.name) {
+    state.name = ctx.message.text;
+    await ctx.reply('📞 Введите ваш номер телефона:');
+  } else if (!state.phone) {
+    state.phone = ctx.message.text;
+    calendarStart.setMinDate(new Date());
+    calendarStart.showCalendar(ctx);
+  } else if (state.awaitingConfirmation) {
+    if (ctx.message.text.toLowerCase() === 'да') {
+      const msg = `📥 Заявка:
+
+🔧 Инструмент: ${state.tool.name}
+👤 Имя: ${state.name}
+📞 Телефон: ${state.phone}
+📅 Дата начала: ${state.startDate}
+📅 Дата конца: ${state.endDate}`;
+
+      await ctx.telegram.sendMessage(ownerId, msg);
+      await ctx.reply('✅ Заявка отправлена! Спасибо, что выбрали нас. Отличного вам настроения! 🌞');
+      rentalState.delete(chatId);
+    } else {
+      await ctx.reply('❌ Заявка отменена.');
+      rentalState.delete(chatId);
+    }
   }
 });
 
+// 📆 Получение даты начала
+calendarStart.setDateListener(async (ctx, date) => {
+  const chatId = ctx.chat.id;
+  const state = rentalState.get(chatId);
+  if (!state) return;
+
+  state.startDate = date;
+  calendarEnd.setMinDate(new Date(date));
+  calendarEnd.showCalendar(ctx);
+});
+
+// 📆 Получение даты конца
+calendarEnd.setDateListener(async (ctx, date) => {
+  const chatId = ctx.chat.id;
+  const state = rentalState.get(chatId);
+  if (!state) return;
+
+  state.endDate = date;
+
+  await ctx.reply(`📝 Проверьте данные:
+
+🔧 Инструмент: ${state.tool.name}
+👤 Имя: ${state.name}
+📞 Телефон: ${state.phone}
+📅 Начало: ${state.startDate}
+📅 Конец: ${state.endDate}
+
+Подтвердить заказ? (напишите "да" или "нет")`);
+
+  state.awaitingConfirmation = true;
+});
+
+// Запускаем бота
 bot.launch();
 console.log('🤖 Бот запущен');
