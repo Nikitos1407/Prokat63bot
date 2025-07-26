@@ -47,11 +47,12 @@ const tools = [
   }
 ];
 
-// Память для шагов
-const userSteps = {};
+const rentalState = new Map();
 
-bot.start(async (ctx) => {
-  const welcome = `👋 Добро пожаловать в *ПРОКАТ Инструментов 63*!\n
+// Команда /start или возвращение в главное меню
+const sendMainMenu = async (ctx) => {
+  const welcome = `👋 Добро пожаловать в *ПРОКАТ Инструментов 63*!
+
 📍 *Гаражный бокс (Новокуйбышевск)*
 🕘 Работаем с 9:00 до 21:00
 💵 Оплата: наличные / перевод
@@ -62,27 +63,29 @@ bot.start(async (ctx) => {
     Markup.button.callback(`${tool.name} — ${tool.price}₽`, tool.id)
   ]);
 
-  await ctx.sendPhoto(
-    'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/logo.png',
+  await ctx.replyWithPhoto(
+    { url: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/logo.png' },
     {
       caption: welcome,
       parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: buttons
-      }
+      reply_markup: Markup.inlineKeyboard(buttons)
     }
   );
-});
+};
 
+bot.start(sendMainMenu);
+
+// Обработка кнопок инструментов
 tools.forEach(tool => {
   bot.action(tool.id, async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.sendPhoto(tool.photo, {
+    await ctx.replyWithPhoto(tool.photo, {
       caption: `🛠 *${tool.name}*\n\n${tool.description}\n\n💰 *Цена:* ${tool.price} ₽ / сутки\n🔐 *Залог:* ${tool.deposit} ₽`,
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [
-          [Markup.button.callback('👉 Арендовать', `rent_${tool.id}`)]
+          [Markup.button.callback('👉 Арендовать', `rent_${tool.id}`)],
+          [Markup.button.callback('🏠 Вернуться в меню', 'back_to_menu')]
         ]
       }
     });
@@ -90,78 +93,86 @@ tools.forEach(tool => {
 
   bot.action(`rent_${tool.id}`, async (ctx) => {
     await ctx.answerCbQuery();
-    userSteps[ctx.from.id] = {
-      step: 'name',
-      tool: tool.name,
-      data: {}
-    };
-    await ctx.reply('Введите ваше *имя*:', { parse_mode: 'Markdown' });
+    const chatId = ctx.chat.id;
+    rentalState.set(chatId, { tool });
+    await ctx.reply('👤 Введите ваше имя:', Markup.keyboard([['🏠 Вернуться в меню']]).oneTime().resize());
   });
 });
 
+// Возврат в главное меню
+bot.action('back_to_menu', async (ctx) => {
+  await ctx.answerCbQuery();
+  await sendMainMenu(ctx);
+});
+
+const isValidPhone = (text) => /^\d{10,15}$/.test(text);
+const isValidDate = (text) => /^\d{2}\.\d{2}\.\d{4}$/.test(text);
+
 bot.on('text', async (ctx) => {
-  const id = ctx.from.id;
-  const state = userSteps[id];
+  const chatId = ctx.chat.id;
+  const state = rentalState.get(chatId);
+  const input = ctx.message.text.trim();
 
-  if (!state) return;
-
-  const text = ctx.message.text;
-
-  if (state.step === 'name') {
-    state.data.name = text;
-    state.step = 'phone';
-    await ctx.reply('Введите *номер телефона*:', { parse_mode: 'Markdown' });
-  } else if (state.step === 'phone') {
-    state.data.phone = text;
-    state.step = 'start';
-    await ctx.reply('Введите *дату начала аренды* (например, 27.07.2025):', { parse_mode: 'Markdown' });
-  } else if (state.step === 'start') {
-    state.data.start = text;
-    state.step = 'end';
-    await ctx.reply('Введите *дату конца аренды*:', { parse_mode: 'Markdown' });
-  } else if (state.step === 'end') {
-    state.data.end = text;
-    state.step = 'confirm';
-
-    const summary = `🔔 Подтвердите заявку:\n\n` +
-      `🛠 Инструмент: *${state.tool}*\n` +
-      `👤 Имя: *${state.data.name}*\n` +
-      `📞 Телефон: *${state.data.phone}*\n` +
-      `📅 С: *${state.data.start}* по *${state.data.end}*`;
-
-    await ctx.reply(summary, {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [Markup.button.callback('✅ Подтвердить', `confirm_${id}`)],
-          [Markup.button.callback('❌ Отмена', `cancel_${id}`)]
-        ]
-      }
-    });
+  if (input === '🏠 Вернуться в меню') {
+    rentalState.delete(chatId);
+    return sendMainMenu(ctx);
   }
-});
 
-bot.action(/^confirm_(\d+)$/, async (ctx) => {
-  const id = ctx.match[1];
-  const state = userSteps[id];
   if (!state) return;
 
-  const message = `📥 Новая заявка:\n\n` +
-    `🛠 Инструмент: ${state.tool}\n` +
-    `👤 Имя: ${state.data.name}\n` +
-    `📞 Телефон: ${state.data.phone}\n` +
-    `📅 Аренда: с ${state.data.start} по ${state.data.end}`;
+  if (!state.name) {
+    state.name = input;
+    await ctx.reply('📞 Введите ваш номер телефона (только цифры):');
+  } else if (!state.phone) {
+    if (!isValidPhone(input)) {
+      await ctx.reply('⚠️ Номер должен содержать только цифры (10–15 цифр). Попробуйте снова:');
+      return;
+    }
+    state.phone = input;
+    await ctx.reply('📅 Введите дату начала аренды (в формате ДД.ММ.ГГГГ):');
+  } else if (!state.startDate) {
+    if (!isValidDate(input)) {
+      await ctx.reply('❌ Неверный формат даты. Введите дату начала в формате ДД.ММ.ГГГГ:');
+      return;
+    }
+    state.startDate = input;
+    await ctx.reply('📅 Введите дату конца аренды (в формате ДД.ММ.ГГГГ):');
+  } else if (!state.endDate) {
+    if (!isValidDate(input)) {
+      await ctx.reply('❌ Неверный формат даты. Введите дату конца в формате ДД.ММ.ГГГГ:');
+      return;
+    }
+    state.endDate = input;
 
-  await ctx.telegram.sendMessage(ownerId, message);
-  await ctx.reply('✅ Заявка отправлена! Спасибо, что выбрали нас. Отличного вам дня!');
+    await ctx.reply(`📝 Проверьте данные:
 
-  delete userSteps[id];
-});
+🔧 Инструмент: ${state.tool.name}
+👤 Имя: ${state.name}
+📞 Телефон: ${state.phone}
+📅 Начало: ${state.startDate}
+📅 Конец: ${state.endDate}
 
-bot.action(/^cancel_(\d+)$/, async (ctx) => {
-  const id = ctx.match[1];
-  delete userSteps[id];
-  await ctx.reply('❌ Заявка отменена.');
+Подтвердить заказ? (напишите "да" или "нет")`, Markup.keyboard([['🏠 Вернуться в меню']]).resize());
+
+    state.awaitingConfirmation = true;
+  } else if (state.awaitingConfirmation) {
+    if (input.toLowerCase() === 'да') {
+      const msg = `📥 Заявка:
+
+🔧 Инструмент: ${state.tool.name}
+👤 Имя: ${state.name}
+📞 Телефон: ${state.phone}
+📅 Дата начала: ${state.startDate}
+📅 Дата конца: ${state.endDate}`;
+
+      await ctx.telegram.sendMessage(ownerId, msg);
+      await ctx.reply('✅ Заявка отправлена! Спасибо, что выбрали нас. Отличного вам настроения! 🌞', Markup.removeKeyboard());
+      rentalState.delete(chatId);
+    } else {
+      await ctx.reply('❌ Заявка отменена.', Markup.removeKeyboard());
+      rentalState.delete(chatId);
+    }
+  }
 });
 
 bot.launch();
