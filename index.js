@@ -27,13 +27,13 @@ const tools = [
     photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/vibroplate-original1.jpg'
   },
   {
-    id: 'auger',
-    name: 'Мотобур Huter GGD-300 с комплектом',
-    price: 1300,
-    deposit: 5000,
-    description: 'С комплектом шнеков и удлинителем. Отлично для бурения лунок и свай.',
-    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/motobur1.jpg'
-  }
+    id: 'mixer',
+    name: 'Строительный миксер Ресанта СМ-1600Э-2',
+    price: 850,
+    deposit: 3000,
+    description: 'Инструмент для замеса строительных смесей. Удобная двухскоростная модель.',
+    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/mikser-original1.jpg'
+  },
   {
     id: 'auger',
     name: 'Мотобур Huter GGD-300 с комплектом',
