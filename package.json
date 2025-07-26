@@ -9,6 +9,6 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "telegraf": "^4.12.2",
-    "telegraf-inline-calendar": "https://github.com/Garufa13/telegraf-inline-calendar.git"
+    "telegraf-inline-calendar": "https://codeload.github.com/Garufa13/telegraf-inline-calendar/tar.gz/refs/heads/master"
   }
 }
