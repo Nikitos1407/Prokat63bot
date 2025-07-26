@@ -35,7 +35,7 @@ const tools = [
     price: 1300,
     deposit: 5000,
     description: 'С шнеками (100–250 мм), удлинитель 1000 мм. Идеально для установки заборов, бурения лунок и свай.',
-    photo: 'https://telegra.ph/file/bc97aa4e4c464ebc1276e.jpg'
+    photo: 'https://ibb.co/ycQM9BF9'
   },
   {
     id: 'trimmer',
