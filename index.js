@@ -283,4 +283,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   console.log(`🚀 Бот запущен на порту ${PORT}`);
   await bot.telegram.setWebhook(`https://${process.env.RENDER_EXTERNAL_HOSTNAME}/bot`);
+  res.send('✅ Webhook установлен!');
 });
