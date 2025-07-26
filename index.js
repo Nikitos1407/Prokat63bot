@@ -11,7 +11,7 @@ const tools = [
     price: 1400,
     deposit: 5000,
     description: 'Мощный и надёжный перфоратор для бурения бетона, кирпича и прочих строительных работ.',
-    photo: 'https://ibb.co/ycQM9BF9'
+    photo: '<a href="https://ibb.co/ycQM9BF9"><img src="https://i.ibb.co/nNLVG8MG/1webp.webp" alt="1webp" border="0"></a>'
   },
   {
     id: 'vibro',
