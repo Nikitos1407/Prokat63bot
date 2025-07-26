@@ -59,7 +59,7 @@ bot.start(async (ctx) => {
   const buttons = tools.map(tool => [Markup.button.callback(`${tool.name} — ${tool.price}₽`, tool.id)]);
 
   await ctx.replyWithPhoto(
-    { url: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/logo-start.jpg' }, // Замените на ваш логотип или фото
+    { url: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/logo.png' }, // Замените на ваш логотип или фото
     {
       caption: welcomeMessage,
       parse_mode: 'Markdown',
