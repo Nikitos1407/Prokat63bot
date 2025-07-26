@@ -93,17 +93,17 @@ bot.hears('📋 Список инструментов', async (ctx) => {
 // 🔧 Карточки инструментов
 tools.forEach(tool => {
   bot.action(tool.id, async (ctx) => {
-    await ctx.answerCbQuery();
-    await ctx.replyWithPhoto(tool.photo, {
-      caption: `🛠 *${tool.name}*\n\n${tool.description}\n\n💰 *Цена:* ${tool.price} ₽ / сутки\n🔐 *Залог:* ${tool.deposit} ₽`,
-      parse_mode: 'Markdown',
-      reply_markup: Markup.inlineKeyboard([
-        [Markup.button.callback('👉 Арендовать', `rent_${tool.id}`)],
-        [Markup.button.callback('🏠 Меню', 'go_menu')]
-      ])
-    });
+  await ctx.answerCbQuery();
+  await ctx.replyWithPhoto(tool.photo, {
+    caption: `🛠 *${tool.name}*\n\n${tool.description}\n\n💰 *Цена:* ${tool.price} ₽ / сутки\n🔐 *Залог:* ${tool.deposit} ₽`,
+    parse_mode: 'Markdown',
+    reply_markup: Markup.inlineKeyboard([
+      [Markup.button.callback('👉 Арендовать', `rent_${tool.id}`)],
+      [Markup.button.callback('🏠 Меню', 'go_menu')]
+    ])
   });
-
+});
+  
   // 👉 Шаг 1 — Ввод имени
   bot.action(`rent_${tool.id}`, async (ctx) => {
     await ctx.answerCbQuery();
