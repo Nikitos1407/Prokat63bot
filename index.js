@@ -19,7 +19,7 @@ const tools = [
     price: 1800,
     deposit: 5000,
     description: 'Бензиновая виброплита 4.8 кВт для уплотнения грунта, тротуарной плитки, щебня.',
-    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/vibroplate-original1.jpg'
+    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/Вибротрамбовка Champion pc9045f фото1.jpg'
   },
   {
     id: 'mixer',
