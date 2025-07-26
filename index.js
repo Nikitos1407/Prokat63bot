@@ -43,7 +43,7 @@ const tools = [
     price: 1300,
     deposit: 3000,
     description: 'Бензиновый триммер для покоса травы, кустарников и участков средней сложности.',
-    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/molotok-original1.jpg'
+    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/motokosa1.jpg'
   }
 ];
 
