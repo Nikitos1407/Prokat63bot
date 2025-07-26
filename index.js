@@ -1,14 +1,15 @@
 require('dotenv').config();
 const express = require('express');
 const { Telegraf, Markup, session } = require('telegraf');
+const fs = require('fs');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const ownerId = process.env.OWNER_ID;
 bot.use(session());
 
 const userStates = new Map();
+const userHistory = new Map();
 
-// 📦 Инструменты
 const tools = [
   {
     id: 'perforator',
@@ -52,16 +53,22 @@ const tools = [
   }
 ];
 
-// Главное меню
 const mainMenu = Markup.keyboard([
   ['📋 Список инструментов'],
   ['📦 Как арендовать', '📍 Где забрать?'],
   ['📞 Позвонить', '💬 Отзывы', '⚙️ О нас']
 ]).resize();
 
-// Проверка даты
 function isValidDate(dateStr) {
   return /^\d{2}\.\d{2}\.\d{4}$/.test(dateStr);
+}
+function parseDate(dateStr) {
+  const [day, month, year] = dateStr.split('.').map(Number);
+  return new Date(year, month - 1, day);
+}
+function getRentalDays(start, end) {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.max(1, Math.round((end - start) / msPerDay));
 }
 
 // /start
@@ -69,7 +76,8 @@ bot.start(async (ctx) => {
   await ctx.replyWithPhoto(
     'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/logo.png',
     {
-      caption: `👋 Добро пожаловать в *ПРОКАТ Инструментов 63*!\n
+      caption: `👋 Добро пожаловать в *ПРОКАТ Инструментов 63*!
+
 📍 *Гаражный бокс (Новокуйбышевск)*
 🕘 Работаем с 9:00 до 21:00
 💵 Оплата: наличные / перевод
@@ -83,18 +91,22 @@ bot.start(async (ctx) => {
 
 bot.command('menu', (ctx) => ctx.reply('📲 Главное меню:', mainMenu));
 
-// 📋 Список инструментов
+// Инструменты
 bot.hears('📋 Список инструментов', async (ctx) => {
   const buttons = tools.map(tool => [Markup.button.callback(`${tool.name} — ${tool.price}₽`, tool.id)]);
   await ctx.reply('Выберите инструмент для аренды:', Markup.inlineKeyboard(buttons));
 });
 
-// Карточки и аренда
 tools.forEach(tool => {
   bot.action(tool.id, async (ctx) => {
     await ctx.answerCbQuery();
     await ctx.replyWithPhoto(tool.photo, {
-      caption: `🛠 *${tool.name}*\n\n${tool.description}\n\n💰 *Цена:* ${tool.price} ₽ / сутки\n🔐 *Залог:* ${tool.deposit} ₽`,
+      caption: `🛠 *${tool.name}*
+
+${tool.description}
+
+💰 *Цена:* ${tool.price} ₽ / сутки
+🔐 *Залог:* ${tool.deposit} ₽`,
       parse_mode: 'Markdown',
       reply_markup: Markup.inlineKeyboard([
         [Markup.button.callback('👉 Арендовать', `rent_${tool.id}`)],
@@ -108,9 +120,18 @@ tools.forEach(tool => {
     userStates.set(ctx.chat.id, { step: 'name', tool });
     await ctx.reply('📍 Шаг 1 из 4 — Введите ваше имя:');
   });
+
+  bot.action(`repeat_${tool.id}`, async (ctx) => {
+    userStates.set(ctx.chat.id, {
+      step: 'startDate',
+      tool,
+      name: 'Ваше имя',
+      phone: 'Ваш телефон'
+    });
+    await ctx.reply('📍 Повтор аренды. Введите дату начала аренды (ДД.ММ.ГГГГ):');
+  });
 });
 
-// Шаги аренды с прогрессом
 bot.on('text', async (ctx) => {
   const state = userStates.get(ctx.chat.id);
   if (!state) return;
@@ -139,18 +160,25 @@ bot.on('text', async (ctx) => {
     if (!isValidDate(text)) {
       return ctx.reply('❌ Введите дату в формате ДД.ММ.ГГГГ:');
     }
-
     state.endDate = text;
+    const start = parseDate(state.startDate);
+    const end = parseDate(state.endDate);
+    const days = getRentalDays(start, end);
+    const total = days * state.tool.price;
+
+    state.total = total;
+    state.days = days;
     state.step = 'confirm';
 
     await ctx.reply(
-      `📝 Проверьте заявку:
+      `🔁 Проверьте данные:
 
-🔧 Инструмент: ${state.tool.name}
-👤 Имя: ${state.name}
 📞 Телефон: ${state.phone}
 📅 С: ${state.startDate}
-📅 По: ${state.endDate}
+📅 По: ${state.endDate} (${days} дн.)
+
+💰 Итого: ${state.tool.price}₽ × ${days} = ${total}₽
+🔐 Залог: ${state.tool.deposit}₽
 
 Подтвердите заказ?`,
       Markup.inlineKeyboard([
@@ -162,7 +190,6 @@ bot.on('text', async (ctx) => {
   }
 });
 
-// Подтверждение
 bot.action('confirm', async (ctx) => {
   const state = userStates.get(ctx.chat.id);
   if (!state) return;
@@ -173,72 +200,86 @@ bot.action('confirm', async (ctx) => {
 👤 Имя: ${state.name}
 📞 Телефон: ${state.phone}
 📅 С: ${state.startDate}
-📅 По: ${state.endDate}`;
+📅 По: ${state.endDate} (${state.days} дн.)
+💰 Аренда: ${state.total}₽ + Залог: ${state.tool.deposit}₽`;
 
   await ctx.telegram.sendMessage(ownerId, message);
-  await ctx.editMessageText('✅ Заявка отправлена! Спасибо, что выбрали нас. Отличного вам дня ☀️');
+  await ctx.editMessageText('✅ Заявка отправлена! Спасибо, что выбрали нас. Отличного дня ☀️', {
+    reply_markup: Markup.inlineKeyboard([
+      [Markup.button.callback('🔁 Повторить этот инструмент', `repeat_${state.tool.id}`)]
+    ])
+  });
+
+  const record = {
+    tool: state.tool.name,
+    startDate: state.startDate,
+    endDate: state.endDate,
+    total: state.total
+  };
+  if (!userHistory.has(ctx.chat.id)) userHistory.set(ctx.chat.id, []);
+  userHistory.get(ctx.chat.id).push(record);
+
   userStates.delete(ctx.chat.id);
+});
+
+bot.command('history', (ctx) => {
+  const history = userHistory.get(ctx.chat.id);
+  if (!history || history.length === 0) {
+    return ctx.reply('📂 У вас пока нет заявок.');
+  }
+  const list = history.map((h, i) =>
+    `#${i + 1}\n🔧 ${h.tool}\n📅 ${h.startDate} → ${h.endDate}\n💰 ${h.total}₽`
+  ).join('\n\n');
+  ctx.reply(`📜 История аренд:\n\n${list}`);
 });
 
 bot.action('cancel', async (ctx) => {
   userStates.delete(ctx.chat.id);
   await ctx.editMessageText('❌ Заявка отменена. Чтобы начать заново — нажмите /menu');
 });
-
 bot.action('go_menu', async (ctx) => {
   await ctx.answerCbQuery();
   await ctx.reply('📲 Главное меню:', mainMenu);
 });
 
-// 📦 Как арендовать
 bot.hears('📦 Как арендовать', (ctx) => {
-  ctx.reply(`1. Выберите инструмент\n2. Нажмите "Арендовать"\n3. Заполните данные\n4. Мы свяжемся с вами!`);
+  ctx.reply(`1. Выберите инструмент
+2. Нажмите "Арендовать"
+3. Заполните данные
+4. Мы свяжемся с вами!`);
 });
-
-// 📍 Где забрать?
 bot.hears('📍 Где забрать?', async (ctx) => {
   await ctx.replyWithLocation(53.101325, 49.965541);
   await ctx.reply(
-    '📍 Адрес: Гаражный бокс, Новокуйбышевск\n\n🗺 Карты:\n' +
-    '[Открыть в Яндекс.Картах](https://yandex.ru/maps/?ll=49.965541%2C53.101325&z=18)\n' +
+    '📍 Адрес: Гаражный бокс, Новокуйбышевск
+
+🗺 Карты:
+' +
+    '[Открыть в Яндекс.Картах](https://yandex.ru/maps/?ll=49.965541%2C53.101325&z=18)
+' +
     '[Открыть в 2ГИС](https://2gis.ru/novokujbyshevsk/firm/70000001103003351/49.966319%2C53.100478?m=49.966093%2C53.100959%2F18.68)',
     { parse_mode: 'Markdown' }
   );
 });
-
-// 📞 Позвонить
 bot.hears('📞 Позвонить', (ctx) => {
   ctx.reply('📞 Связаться с нами:', Markup.inlineKeyboard([
     [Markup.button.url('📞 Позвонить', 'tel:+79991234567')],
     [Markup.button.url('💬 Написать в Telegram', 'https://t.me/ProkatinstrumentaNSK')]
   ]));
 });
-
-// 💬 Отзывы
 bot.hears('💬 Отзывы', (ctx) => {
   ctx.reply('⭐️ Отзывы от довольных клиентов скоро появятся!');
 });
-
-// ⚙️ О нас
 bot.hears('⚙️ О нас', (ctx) => {
   ctx.reply('🔧 Прокат инструмента в Новокуйбышевске. Всё надёжно, быстро и просто!');
 });
-
-// Ошибки
 bot.catch((err, ctx) => {
   console.error(`❌ Ошибка в ${ctx.updateType}`, err);
 });
 
-// ====================
-// Express + Webhook
-// ====================
 const app = express();
 app.use(bot.webhookCallback('/bot'));
-
-app.get('/', (req, res) => {
-  res.send('🤖 Бот работает!');
-});
-
+app.get('/', (req, res) => res.send('🤖 Бот работает!'));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   console.log(`🚀 Бот запущен на порту ${PORT}`);
