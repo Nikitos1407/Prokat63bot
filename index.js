@@ -47,46 +47,49 @@ const tools = [
   }
 ];
 
+// Команда /start с фото и кнопками
 bot.start(async (ctx) => {
-  const welcomeMessage = `👋 Добро пожаловать в *ПРОКАТ Инструментов 63*!
-
+  const welcome = `👋 Добро пожаловать в *ПРОКАТ Инструментов 63*!\n
 📍 *Гаражный бокс (Новокуйбышевск)*
 🕘 Работаем с 9:00 до 21:00
 💵 Оплата: наличные / перевод
 
 Выберите инструмент для аренды:`;
 
-  const buttons = tools.map(tool => [Markup.button.callback(`${tool.name} — ${tool.price}₽`, tool.id)]);
+  const buttons = tools.map(tool => [
+    Markup.button.callback(`${tool.name} — ${tool.price}₽`, tool.id)
+  ]);
 
- await ctx.replyWithPhoto(
-  { url: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/logo.png' },
-  {
-    caption: welcomeMessage,
-    parse_mode: 'Markdown',
-    reply_markup: {
-      inline_keyboard: buttons
+  await ctx.sendPhoto(
+    'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/logo.png',
+    {
+      caption: welcome,
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: buttons
+      }
     }
-  }
-);
+  );
+});
 
+// Обработка кнопок по каждому инструменту
 tools.forEach(tool => {
   bot.action(tool.id, async (ctx) => {
-    await ctx.replyWithPhoto({ url: tool.photo }, {
-      caption: `🛠 *${tool.name}*
-
-${tool.description}
-
-💰 *Цена:* ${tool.price} ₽ / сутки
-🔐 *Залог:* ${tool.deposit} ₽`,
+    await ctx.answerCbQuery(); // убираем "часики"
+    await ctx.sendPhoto(tool.photo, {
+      caption: `🛠 *${tool.name}*\n\n${tool.description}\n\n💰 *Цена:* ${tool.price} ₽ / сутки\n🔐 *Залог:* ${tool.deposit} ₽`,
       parse_mode: 'Markdown',
-      reply_markup: Markup.inlineKeyboard([
-        [Markup.button.callback('👉 Арендовать', `rent_${tool.id}`)]
-      ])
+      reply_markup: {
+        inline_keyboard: [
+          [Markup.button.callback('👉 Арендовать', `rent_${tool.id}`)]
+        ]
+      }
     });
   });
 
   bot.action(`rent_${tool.id}`, async (ctx) => {
-    ctx.reply(`📩 Отправьте заявку в следующем формате:
+    await ctx.answerCbQuery();
+    await ctx.reply(`📩 Отправьте заявку в следующем формате:
 
 Имя:
 Телефон:
@@ -96,11 +99,10 @@ ${tool.description}
   });
 });
 
+// Прием текста заявки
 bot.on('text', async (ctx) => {
   if (ctx.message.text.toLowerCase().includes('телефон')) {
-    await ctx.telegram.sendMessage(ownerId, `📥 Заявка:
-
-${ctx.message.text}`);
+    await ctx.telegram.sendMessage(ownerId, `📥 Заявка:\n\n${ctx.message.text}`);
     await ctx.reply('✅ Заявка отправлена! Мы скоро свяжемся с вами.');
   }
 });
