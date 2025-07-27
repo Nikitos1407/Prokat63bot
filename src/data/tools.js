@@ -13,7 +13,7 @@ module.exports = [
     price: 1800,
     deposit: 5000,
     description: 'Для уплотнения грунта, плитки, щебня.',
-    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/vibroplate-original1.jpg'
+    photo: 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/mikser-original1.jpg'
   },
   {
     id: 'mixer',
