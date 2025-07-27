@@ -13,6 +13,7 @@ module.exports = (bot, tools) => {
 ${tool.description}
 💰 *Цена:* ${tool.price} ₽/сутки
 🔐 *Залог:* ${tool.deposit} ₽`,
+        parse_mode: 'Markdown',
         reply_markup: Markup.inlineKeyboard([
           [Markup.button.callback('👉 Арендовать', `rent_${tool.id}`)],
           [Markup.button.callback('🏠 Меню', 'go_menu')]
