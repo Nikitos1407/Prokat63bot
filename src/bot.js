@@ -1,6 +1,3 @@
-bot.on('message', ctx => {
-  ctx.reply('Я получил твое сообщение!');
-});
 const { Telegraf, Markup, session } = require('telegraf');
 const { BOT_TOKEN, OWNER_ID } = require('./config');
 const { userStates, userHistory } = require('./utils/storage');
@@ -15,6 +12,9 @@ if (!BOT_TOKEN || !OWNER_ID) {
 
 const bot = new Telegraf(BOT_TOKEN);
 bot.use(session());
+bot.on('message', ctx => {
+  ctx.reply('Я получил твое сообщение!');
+});
 
 // Команды
 require('./commands/start')(bot, mainMenu);
