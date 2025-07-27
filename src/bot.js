@@ -12,10 +12,6 @@ if (!BOT_TOKEN || !OWNER_ID) {
 
 const bot = new Telegraf(BOT_TOKEN);
 bot.use(session());
-bot.on('message', ctx => {
-  ctx.reply('Я получил твое сообщение!');
-});
-
 // Команды
 require('./commands/start')(bot, mainMenu);
 require('./commands/menu')(bot, mainMenu);
