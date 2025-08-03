@@ -14,7 +14,7 @@ const auth = new google.auth.GoogleAuth({
     'https://www.googleapis.com/auth/calendar'  // <-- добавь это!
   ],
 });
-const SPREADSHEET_ID = '1NGF_Xq4NatP3G2dpfIHdrG-OBAsn1UNiA1tNKZCYGRs'; // <-- твой ID таблицы
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const sheetName = 'Заявки';
 
 // --- Добавление заказа в Google Sheets ---
@@ -77,9 +77,7 @@ async function addOrderToCalendar(order, tool) {
   };
 
   try {
-    await calendar.events.insert({
-    calendarId: process.env.GOOGLE_CALENDAR_ID,
-    resource: event,
+   GOOGLE_CALENDAR_ID=primary
 });
     
     console.log('Событие добавлено в календарь!');
