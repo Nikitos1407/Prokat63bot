@@ -399,6 +399,7 @@ bot.hears('📋 Список инструментов', async (ctx) => {
 
 // --- Детальная карточка ---
 bot.action(/^show_(.+)$/, async (ctx) => {
+  try { await ctx.deleteMessage(); } catch(e) {}
   const toolId = ctx.match[1];
   const tool = tools.find(t => t.id === toolId);
   if (!tool) return ctx.reply('Инструмент не найден. Пожалуйста, выберите снова.');
@@ -579,6 +580,7 @@ bot.action('confirm_rent', async (ctx) => {
 });
 
 bot.action('menu', async (ctx) => {
+  try { await ctx.deleteMessage(); } catch(e) {}
   delete rentData[ctx.from.id];
   await ctx.reply('Главное меню:', mainMenu);
   await ctx.answerCbQuery();
