@@ -78,14 +78,13 @@ async function addOrderToCalendar(order, tool) {
 
   try {
     await calendar.events.insert({
-      calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary', // <-- вот так!
+      calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary',
       resource: event,
-    
+    });
     console.log('Событие добавлено в календарь!');
   } catch (e) {
     console.error('Ошибка при добавлении в календарь:', e.message);
   }
-}
 
 // --- Инструменты ---
 const tools = [
