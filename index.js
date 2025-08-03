@@ -224,6 +224,7 @@ bot.hears('💬 Отзывы', async (ctx) => {
 
 // Кнопка "Отзывы с Авито"
 bot.action('avito_reviews', async (ctx) => {
+  try { await ctx.deleteMessage(); } catch(e) {}
   avitoSliderState[ctx.from.id] = 0;
   const idx = 0;
   await ctx.replyWithPhoto(
@@ -638,6 +639,7 @@ bot.hears('📍 Где забрать?', async (ctx) => {
 });
 
 bot.action('where_pickup', async (ctx) => {
+  try { await ctx.deleteMessage(); } catch(e) {}
   await ctx.reply('Пункт выдачи: г. Новокуйбышевск, Гаражный бокс\nКоординаты: 53.100704, 49.966212');
   await ctx.replyWithLocation(53.100704, 49.966212);
   await ctx.reply(
@@ -652,6 +654,7 @@ bot.action('where_pickup', async (ctx) => {
 
 // --- "Список инструментов" из "Как арендовать" ---
 bot.action('go_tools', async (ctx) => {
+  try { await ctx.deleteMessage(); } catch(e) {}
   const buttons = tools.map(tool => [
     Markup.button.callback(`${tool.name} — ${tool.price}₽`, `show_${tool.id}`)
   ]);
@@ -691,6 +694,7 @@ bot.hears('⚙️ О нас', (ctx) =>
 );
 
 bot.action('go_contact', async (ctx) => {
+  try { await ctx.deleteMessage(); } catch(e) {}
   await ctx.reply(
     '📱 <b>Телефон:</b> +7 929 569-69-90\n' +
     '📍 <b>Адрес:</b> г. Новокуйбышевск, Гаражный бокс\n' +
