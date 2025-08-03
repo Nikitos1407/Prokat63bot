@@ -85,7 +85,7 @@ async function addOrderToCalendar(order, tool) {
   } catch (e) {
     console.error('Ошибка при добавлении в календарь:', e.message);
   }
-
+}
 // --- Инструменты ---
 const tools = [
   {
