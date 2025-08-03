@@ -8,10 +8,10 @@ const LOGO = 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/ima
 
 // --- Google Sheets настройка ---
 const auth = new google.auth.GoogleAuth({
-  keyFile: path.join(__dirname, 'google-key.json'),
+  keyFile: process.env.GOOGLE_KEY_PATH || path.join(__dirname, 'google-key.json'),
   scopes: [
     'https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/calendar'  // <-- добавь это!
+    'https://www.googleapis.com/auth/calendar'
   ],
 });
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
