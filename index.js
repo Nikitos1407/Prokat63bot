@@ -78,7 +78,7 @@ async function addOrderToCalendar(order, tool) {
 
   try {
     await calendar.events.insert({
-      calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary',
+      calendarId: process.env.GOOGLE_CALENDAR_ID,
       resource: event,
     });
     console.log('Событие добавлено в календарь!');
