@@ -3,6 +3,12 @@ const { Telegraf, Markup } = require('telegraf');
 const { google } = require('googleapis');
 const path = require('path');
 
+// Логируем все входящие апдейты
+bot.use(async (ctx, next) => {
+  console.log('➡️ update:', ctx.updateType);
+  return next();
+});
+
 // --- Логотип ---
 const LOGO = 'https://raw.githubusercontent.com/Nikitos1407/Prokat63bot/main/images/logo.png';
 
