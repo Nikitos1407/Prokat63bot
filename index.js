@@ -729,3 +729,18 @@ console.log('Bot started!');
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
+// --- HTTP healthcheck для Render ---
+const http = require('http');
+const PORT = process.env.PORT || 10000;
+
+http.createServer((req, res) => {
+  if (req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    return res.end('ok');
+  }
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('bot is running');
+}).listen(PORT, () => {
+  console.log('🌐 Сервер слушает порт', PORT);
+});
