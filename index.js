@@ -723,9 +723,18 @@ function calcDays(start, end) {
   return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
 }
 
-// --- Запуск ---
-bot.launch();
-console.log('Bot started!');
+// --- Запуск с отключением вебхука (для polling) ---
+(async () => {
+  try {
+    // Важно: удаляем вебхук, чтобы Telegram снова начал отдавать getUpdates
+    await bot.telegram.deleteWebhook({ drop_pending_updates: true });
+
+    await bot.launch();
+    console.log('Bot started!');
+  } catch (e) {
+    console.error('❌ Ошибка запуска бота:', e);
+  }
+})();
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
