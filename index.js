@@ -3,6 +3,9 @@ const { Telegraf, Markup } = require('telegraf');
 const { google } = require('googleapis');
 const path = require('path');
 
+// --- Telegraf bot ---
+const bot = new Telegraf(process.env.BOT_TOKEN);
+
 // Логируем все входящие апдейты
 bot.use(async (ctx, next) => {
   console.log('➡️ update:', ctx.updateType);
@@ -180,8 +183,6 @@ const mainMenu = Markup.keyboard([
   ['💬 Отзывы', '⚙️ О нас'],
 ]).resize();
 
-// --- Telegraf bot ---
-const bot = new Telegraf(process.env.BOT_TOKEN);
 // --- Управление отзывами с оценкой ---
 const reviewMode = {}; // { userId: { step, score } }
 // --- Массив ссылок на скриншоты отзывов с Авито ---
